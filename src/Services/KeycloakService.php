@@ -130,7 +130,7 @@ class KeycloakService
         }
 
         if (is_null($this->redirectLogout)) {
-            $this->redirectLogout = Config::get('keycloak-web.redirect_logout');
+            $this->redirectLogout = Config::get('keycloak-web.redirect_logout', '/');
         }
 
         $this->state = $this->generateRandomState();
@@ -167,14 +167,14 @@ class KeycloakService
     {
         $url = $this->getOpenIdValue('end_session_endpoint');
 
-        if (empty($this->redirectLogout)) {
-            $this->redirectLogout = url('/');
-        }
+        $redirectLogout = url($this->redirectLogout);
+
+        $id_token_hint = Session::get(self::KEYCLOAK_SESSION)['id_token'];
 
         $params = [
             'client_id' => $this->getClientId(),
-            'post_logout_redirect_uri' => $this->redirectLogout,
-            'id_token_hint' => ''
+            'post_logout_redirect_uri' => $redirectLogout,
+            'id_token_hint' => $id_token_hint
         ];
 
         return $this->buildUrl($url, $params);
