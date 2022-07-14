@@ -173,7 +173,8 @@ class KeycloakService
 
         $params = [
             'client_id' => $this->getClientId(),
-            'redirect_uri' => $this->redirectLogout,
+            'post_logout_redirect_uri' => $this->redirectLogout,
+            'id_token_hint' => ''
         ];
 
         return $this->buildUrl($url, $params);
