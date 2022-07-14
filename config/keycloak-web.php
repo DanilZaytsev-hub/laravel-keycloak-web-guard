@@ -52,6 +52,13 @@ return [
     'redirect_url' => '/admin',
 
     /**
+     * Page to redirect after logout
+     *
+     * @see Vizir\KeycloakWebGuard\Controllers\AuthController::logout()
+     */
+    'redirect_logout' => '/',
+
+    /**
      * The routes for authenticate
      *
      * Accept a string as the first parameter of route() or false to disable the route.
