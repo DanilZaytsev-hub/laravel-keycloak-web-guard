@@ -564,7 +564,9 @@ class KeycloakService
             if ($response->getStatusCode() === 200) {
                 return true;
             }
-            return false;
+            if ($response->getStatusCode() === 403) {
+                return false;
+            }
         } catch (GuzzleException $e) {
             $this->logException($e);
 
