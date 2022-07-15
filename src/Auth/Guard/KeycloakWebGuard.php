@@ -133,10 +133,6 @@ class KeycloakWebGuard implements Guard
         if (empty($user)) {
             KeycloakWeb::forgetToken();
 
-            if (Config::get('app.debug', false)) {
-                throw new KeycloakCallbackException('User cannot be authenticated.');
-            }
-
             return false;
         }
 
