@@ -169,7 +169,7 @@ class KeycloakService
 
         $redirectLogout = url($this->redirectLogout);
 
-        $id_token_hint = Session::get(self::KEYCLOAK_SESSION)['id_token'];
+        $id_token_hint = session()->get(self::KEYCLOAK_SESSION)['id_token'];
 
         $params = [
             'client_id' => $this->getClientId(),
@@ -555,8 +555,12 @@ class KeycloakService
             'response_mode' => 'decision',
         ];
 
+        $headers = [
+            'Authorization' => 'Bearer ' . session()->get(self::KEYCLOAK_SESSION)['access_token'],
+        ];
+
         try {
-            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params, 'headers' => $headers]);
             if ($response->getStatusCode() === 200) {
                 return true;
             }
