@@ -564,10 +564,11 @@ class KeycloakService
             if ($response->getStatusCode() === 200) {
                 return true;
             }
-            if ($response->getStatusCode() === 403) {
+        } catch (GuzzleException $e) {
+            if ($e->getCode() === 403) {
                 return false;
             }
-        } catch (GuzzleException $e) {
+
             $this->logException($e);
 
             throw new Exception('[Keycloak Error] It was not possible to obtain permissions: ' . $e->getMessage());
