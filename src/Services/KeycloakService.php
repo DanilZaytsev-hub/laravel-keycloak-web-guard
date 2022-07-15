@@ -208,7 +208,7 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
 
@@ -248,7 +248,7 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
 
@@ -282,7 +282,7 @@ class KeycloakService
             'refresh_token' => $refreshToken,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
 
@@ -388,7 +388,7 @@ class KeycloakService
     public function validateState($state)
     {
         $challenge = session()->get(self::KEYCLOAK_SESSION_STATE);
-        return (! empty($state) && ! empty($challenge) && $challenge === $state);
+        return (!empty($state) && !empty($challenge) && $challenge === $state);
     }
 
     /**
@@ -427,7 +427,7 @@ class KeycloakService
             return trim($url, '?') . '?' . Arr::query($params);
         }
 
-        if (! empty($parsedUrl['port'])) {
+        if (!empty($parsedUrl['port'])) {
             $parsedUrl['host'] .= ':' . $parsedUrl['port'];
         }
 
@@ -437,7 +437,7 @@ class KeycloakService
         $url = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
         $query = [];
 
-        if (! empty($parsedUrl['query'])) {
+        if (!empty($parsedUrl['query'])) {
             $parsedUrl['query'] = explode('&', $parsedUrl['query']);
 
             foreach ($parsedUrl['query'] as $value) {
@@ -487,7 +487,7 @@ class KeycloakService
      */
     protected function getOpenIdValue($key)
     {
-        if (! $this->openid) {
+        if (!$this->openid) {
             $this->openid = $this->getOpenIdConfiguration();
         }
 
@@ -507,7 +507,7 @@ class KeycloakService
         if ($this->cacheOpenid) {
             $configuration = Cache::get($cacheKey, []);
 
-            if (! empty($configuration)) {
+            if (!empty($configuration)) {
                 return $configuration;
             }
         }
@@ -540,6 +540,35 @@ class KeycloakService
     }
 
     /**
+     * Check user permissions for resource
+     * 
+     * @param string $permissions 
+     * @return bool 
+     */
+    public function obtainPermissions($permissions)
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+        $params = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
+            'audience' => $this->clientId,
+            'permission' => $permissions,
+            'response_mode' => 'decision',
+        ];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+            if ($response->getStatusCode() === 200) {
+                return true;
+            }
+            return false;
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to obtain permissions: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Check we need to refresh token and refresh if needed
      *
      * @param  array $credentials
@@ -547,12 +576,12 @@ class KeycloakService
      */
     protected function refreshTokenIfNeeded($credentials)
     {
-        if (! is_array($credentials) || empty($credentials['access_token']) || empty($credentials['refresh_token'])) {
+        if (!is_array($credentials) || empty($credentials['access_token']) || empty($credentials['refresh_token'])) {
             return $credentials;
         }
 
         $token = new KeycloakAccessToken($credentials);
-        if (! $token->hasExpired()) {
+        if (!$token->hasExpired()) {
             return $credentials;
         }
 
@@ -576,7 +605,7 @@ class KeycloakService
     protected function logException(GuzzleException $e)
     {
         // Guzzle 7
-        if (! method_exists($e, 'getResponse') || empty($e->getResponse())) {
+        if (!method_exists($e, 'getResponse') || empty($e->getResponse())) {
             Log::error('[Keycloak Service] ' . $e->getMessage());
             return;
         }

@@ -188,4 +188,15 @@ class KeycloakWebGuard implements Guard
     {
         return empty(array_diff((array) $roles, $this->roles($resource)));
     }
+
+    /**
+     * Check user permissions for resource
+     * 
+     * @param string $permissions 
+     * @return bool 
+     */
+    public function hasPermissions($permissions)
+    {
+        return KeycloakWeb::obtainPermissions($permissions);
+    }
 }
