@@ -169,12 +169,14 @@ class KeycloakService
 
         $redirectLogout = url($this->redirectLogout);
 
-        $id_token_hint = session()->get(self::KEYCLOAK_SESSION)['id_token'];
+        $token = self::retrieveToken();
+        $token = new KeycloakAccessToken($token);
+        $idTokenHint = $token->getIdToken();
 
         $params = [
             'client_id' => $this->getClientId(),
             'post_logout_redirect_uri' => $redirectLogout,
-            'id_token_hint' => $id_token_hint
+            'id_token_hint' => $idTokenHint
         ];
 
         return $this->buildUrl($url, $params);
@@ -548,6 +550,11 @@ class KeycloakService
     public function obtainPermissions($permissions)
     {
         $url = $this->getOpenIdValue('token_endpoint');
+
+        $token = self::retrieveToken();
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
         $params = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
             'audience' => $this->clientId,
@@ -556,7 +563,7 @@ class KeycloakService
         ];
 
         $headers = [
-            'Authorization' => 'Bearer ' . session()->get(self::KEYCLOAK_SESSION)['access_token'],
+            'Authorization' => 'Bearer ' . $accessToken,
         ];
 
         try {
