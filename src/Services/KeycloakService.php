@@ -169,7 +169,7 @@ class KeycloakService
 
         $redirectLogout = url($this->redirectLogout);
 
-        $token = self::retrieveToken();
+        $token = $this->retrieveToken();
         $token = new KeycloakAccessToken($token);
         $idTokenHint = $token->getIdToken();
 
@@ -551,7 +551,7 @@ class KeycloakService
     {
         $url = $this->getOpenIdValue('token_endpoint');
 
-        $token = self::retrieveToken();
+        $token = $this->retrieveToken();
         $token = new KeycloakAccessToken($token);
         $accessToken = $token->getAccessToken();
 
