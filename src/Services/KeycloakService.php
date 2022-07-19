@@ -555,6 +555,10 @@ class KeycloakService
         $token = new KeycloakAccessToken($token);
         $accessToken = $token->getAccessToken();
 
+        if (empty($token) || empty($token['access_token'])) {
+            return false;
+        }
+        
         $params = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
             'audience' => $this->clientId,
