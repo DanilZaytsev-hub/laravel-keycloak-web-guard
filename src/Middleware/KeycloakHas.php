@@ -18,7 +18,7 @@ class KeycloakHas extends KeycloakAuthenticated
      */
     public function handle($request, Closure $next, ...$guards)
     {
-        if (Auth::hasPermissions($guards)) {
+        if (Auth::hasPermissions(implode(',',$guards))) {
             return $next($request);
         }
 
