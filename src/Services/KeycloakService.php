@@ -552,13 +552,13 @@ class KeycloakService
         $url = $this->getOpenIdValue('token_endpoint');
 
         $token = $this->retrieveToken();
-        $token = new KeycloakAccessToken($token);
-        $accessToken = $token->getAccessToken();
-
         if (empty($token) || empty($token['access_token'])) {
             return false;
         }
-        
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
         $params = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
             'audience' => $this->clientId,
