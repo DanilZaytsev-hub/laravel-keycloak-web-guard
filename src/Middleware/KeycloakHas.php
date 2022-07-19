@@ -18,12 +18,10 @@ class KeycloakHas extends KeycloakAuthenticated
      */
     public function handle($request, Closure $next, ...$guards)
     {
-        if (Auth::hasPermissions(implode(',',$guards))) {
+        if (Auth::hasPermissions($guards)) {
             return $next($request);
         }
 
-        throw new KeycloakCanException(
-            'Unauthenticated.', $guards, $this->redirectTo($request)
-        );
+        return redirect(config('keycloak-web.redirect_url'));
     }
 }
