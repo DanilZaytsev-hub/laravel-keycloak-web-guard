@@ -170,6 +170,10 @@ class KeycloakService
         $redirectLogout = url($this->redirectLogout);
 
         $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return '';
+        }
+
         $token = new KeycloakAccessToken($token);
         $idTokenHint = $token->getIdToken();
 
