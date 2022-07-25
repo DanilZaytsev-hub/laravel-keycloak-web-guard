@@ -16,9 +16,9 @@ class KeycloakHas extends KeycloakAuthenticated
      * @param  string|null  $guard
      * @return mixed
      */
-    public function handle($request, Closure $next, ...$guards)
+    public function handle($request, Closure $next, $guard)
     {
-        if (Auth::hasPermissions($guards)) {
+        if (Auth::hasPermissions($guard)) {
             return $next($request);
         }
 
