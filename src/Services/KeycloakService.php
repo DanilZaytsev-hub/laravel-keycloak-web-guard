@@ -198,6 +198,7 @@ class KeycloakService
         $url = $this->getLoginUrl();
         return str_replace('/auth?', '/registrations?', $url);
     }
+
     /**
      * Get access token from Code
      *
@@ -217,6 +218,32 @@ class KeycloakService
         if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
+
+        $token = [];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+
+            if ($response->getStatusCode() === 200) {
+                $token = $response->getBody()->getContents();
+                $token = json_decode($token, true);
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+        }
+
+        return $token;
+    }
+
+    public function getAccessTokenByClientCredentials()
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+        $params = [
+            'client_id' => $this->getClientId(),
+            'grant_type' => 'client_credentials',
+            'redirect_uri' => $this->callbackUrl,
+            'client_secret' => $this->clientSecret
+        ];
 
         $token = [];
 
@@ -376,7 +403,7 @@ class KeycloakService
             'Authorization' => 'Bearer ' . $accessToken,
             'Accept' => 'application/json',
         ];
-        
+
         try {
             $response = $this->httpClient->request('GET', $url, [
                 'query' => $searchParams,
