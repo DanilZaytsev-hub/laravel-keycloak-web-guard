@@ -355,6 +355,47 @@ class KeycloakService
     }
 
     /**
+     * Get users
+     * @param  array $searchParams
+     * @return array
+     */
+    public function getUsers($searchParams)
+    {
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users';
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return false;
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+        
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'query' => $searchParams,
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $users = $response->getBody()->getContents();
+                $users = json_decode($users, true);
+                return $users;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load users: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Retrieve Token from Session
      *
      * @return array|null
