@@ -24,7 +24,7 @@ class KeycloakHas extends KeycloakAuthenticated
 
         throw new KeycloakCanException(
             'Unauthenticated.',
-            $guards,
+            $guard,
             $this->redirectTo($request)
         );
     }
