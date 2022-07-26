@@ -27,6 +27,6 @@ class KeycloakCan extends KeycloakAuthenticated
             return $next($request);
         }
 
-        return redirect(config('keycloak-web.redirect_url'));
+        return $this->redirectTo($request);
     }
 }

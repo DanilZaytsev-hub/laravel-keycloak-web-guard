@@ -14,6 +14,6 @@ class KeycloakAuthenticated extends Authenticate
      */
     protected function redirectTo($request)
     {
-        return route('keycloak.login');
+        return route(config('keycloak-web.redirect_url'));
     }
 }
