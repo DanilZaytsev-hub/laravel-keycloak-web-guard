@@ -22,10 +22,6 @@ class KeycloakHas extends KeycloakAuthenticated
             return $next($request);
         }
 
-        throw new KeycloakCanException(
-            'Unauthenticated.',
-            [$guard],
-            $this->redirectTo($request)
-        );
+        return redirect('/profile');
     }
 }
