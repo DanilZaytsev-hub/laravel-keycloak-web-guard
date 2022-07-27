@@ -63,8 +63,8 @@ return [
      *
      * Accept a string as the first parameter of route() or false to disable the route.
      *
-     * The routes will receive the name "keycloak.{route}" and login/callback are required.
-     * So, if you make it false, you shoul register a named 'keycloak.login' route and extend
+     * The routes will receive the name "{route}" and login/callback are required.
+     * So, if you make it false, you shoul register a named 'login' route and extend
      * the Vizir\KeycloakWebGuard\Controllers\AuthController controller.
      */
     'routes' => [

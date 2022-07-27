@@ -126,7 +126,7 @@ class KeycloakService
         }
 
         if (is_null($this->callbackUrl)) {
-            $this->callbackUrl = route('keycloak.callback');
+            $this->callbackUrl = route('callback');
         }
 
         if (is_null($this->redirectLogout)) {

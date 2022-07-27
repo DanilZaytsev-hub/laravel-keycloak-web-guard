@@ -82,6 +82,6 @@ class AuthController extends Controller
             }
         }
 
-        return redirect(route('keycloak.login'));
+        return redirect(route('login'));
     }
 }
