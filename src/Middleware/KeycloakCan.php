@@ -4,9 +4,8 @@ namespace Vizir\KeycloakWebGuard\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\Auth;
-use Vizir\KeycloakWebGuard\Exceptions\KeycloakCanException;
 
-class KeycloakCan extends KeycloakAuthenticated
+class KeycloakCan
 {
     /**
      * Handle an incoming request.
@@ -27,6 +26,6 @@ class KeycloakCan extends KeycloakAuthenticated
             return $next($request);
         }
 
-        return redirect('/profile');
+        return redirect(url(config('keycloak-web.redirect_url')));
     }
 }

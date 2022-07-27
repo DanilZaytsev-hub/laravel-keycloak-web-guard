@@ -139,7 +139,6 @@ class KeycloakWebGuard implements Guard
         // Provide User
         $user = $this->provider->retrieveByCredentials([
             'email' => $user['email'],
-            'name' => $user['name'],
         ]);
         $this->setUser($user);
 
