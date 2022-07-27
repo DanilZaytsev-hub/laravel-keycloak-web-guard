@@ -60,9 +60,6 @@ class KeycloakWebGuardServiceProvider extends ServiceProvider
             return $app->make(KeycloakService::class);
         });
 
-        // Routes
-        $this->registerRoutes();
-
         // Bind for client data
         $this->app->when(KeycloakService::class)->needs(ClientInterface::class)->give(function() {
             return new Client(Config::get('keycloak-web.guzzle_options', []));
