@@ -53,28 +53,28 @@ class KeycloakWeb extends Facade
         if (!empty($routes['login'])) {
             $router->middleware('web')->get(
                 $routes['login'],
-                'Vizir\KeycloakWebGuard\Controllers\AuthController@login'
+                '\Vizir\KeycloakWebGuard\Controllers\AuthController@login'
             )->name('keycloak.login');
         }
 
         if (!empty($routes['logout'])) {
             $router->middleware('web')->get(
                 $routes['logout'],
-                'Vizir\KeycloakWebGuard\Controllers\AuthController@logout'
+                '\Vizir\KeycloakWebGuard\Controllers\AuthController@logout'
             )->name('keycloak.logout');
         }
 
         if (!empty($routes['register'])) {
             $router->middleware('web')->get(
                 $routes['register'],
-                'Vizir\KeycloakWebGuard\Controllers\AuthController@register'
+                '\Vizir\KeycloakWebGuard\Controllers\AuthController@register'
             )->name('keycloak.register');
         }
 
         if (!empty($routes['callback'])) {
             $router->middleware('web')->get(
                 $routes['callback'],
-                'Vizir\KeycloakWebGuard\Controllers\AuthController@callback'
+                '\Vizir\KeycloakWebGuard\Controllers\AuthController@callback'
             )->name('keycloak.callback');
         }
     }
