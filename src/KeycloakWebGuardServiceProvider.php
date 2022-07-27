@@ -69,16 +69,16 @@ class KeycloakWebGuardServiceProvider extends ServiceProvider
         $this->registerRoutes();
 
         // Middleware Group
-        $this->app['router']->middlewareGroup('keycloak-web', [
-            StartSession::class,
-            KeycloakAuthenticated::class,
-        ]);
+        // $this->app['router']->middlewareGroup('keycloak-web', [
+        //     StartSession::class,
+        //     KeycloakAuthenticated::class,
+        // ]);
 
         // Add Middleware "keycloak-web-can"
-        $this->app['router']->aliasMiddleware('keycloak-web-can', KeycloakCan::class);
+        // $this->app['router']->aliasMiddleware('keycloak-web-can', KeycloakCan::class);
 
         // Add Middleware "keycloak-web-has"
-        $this->app['router']->aliasMiddleware('keycloak-web-has', KeycloakHas::class);
+        // $this->app['router']->aliasMiddleware('keycloak-web-has', KeycloakHas::class);
 
         // Bind for client data
         $this->app->when(KeycloakService::class)->needs(ClientInterface::class)->give(function() {

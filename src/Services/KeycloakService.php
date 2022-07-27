@@ -393,7 +393,7 @@ class KeycloakService
 
         $token = $this->retrieveToken();
         if (empty($token) || empty($token['access_token'])) {
-            return false;
+            return [];
         }
 
         $token = new KeycloakAccessToken($token);
@@ -648,13 +648,13 @@ class KeycloakService
                 return true;
             }
         } catch (GuzzleException $e) {
-            if ($e->getCode() === 403) {
-                return false;
-            }
-
+            // if ($e->getCode() === 403) {
+            //     return false;
+            // }
             $this->logException($e);
 
-            throw new Exception('[Keycloak Error] It was not possible to obtain permissions: ' . $e->getMessage());
+            // throw new Exception('[Keycloak Error] It was not possible to obtain permissions: ' . $e->getMessage());
+            return false;
         }
     }
 
