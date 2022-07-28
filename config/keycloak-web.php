@@ -73,6 +73,10 @@ return [
         'register' => 'register',
         'callback' => 'callback',
     ],
+    
+    'sync_attributes' => [
+        'email' => 'email',
+    ],
 
     /**
     * GuzzleHttp Client options

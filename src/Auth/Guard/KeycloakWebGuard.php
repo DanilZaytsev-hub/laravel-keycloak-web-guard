@@ -136,10 +136,19 @@ class KeycloakWebGuard implements Guard
             return false;
         }
 
+        $syncAttributes = config('keycloak-web.sync_attributes');
+        $userData = [];
+        foreach ($syncAttributes as $attribute => $field) {
+            $userData[$attribute] = $user[$field] !== '' ? $user[$field] : null;
+        }
         // Provide User
-        $user = $this->provider->retrieveByCredentials([
-            'email' => $user['email'],
-        ]);
+        $user = $this->provider->retrieveByCredentials($userData);
+
+        if (!$user) {
+            $user = $this->provider->createModel();
+            $user->save();
+        }
+
         $this->setUser($user);
 
         return true;
