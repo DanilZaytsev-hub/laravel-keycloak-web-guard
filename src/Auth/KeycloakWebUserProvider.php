@@ -48,7 +48,7 @@ class KeycloakWebUserProvider implements UserProvider
         foreach ($syncAttributes as $modelAttribute => $keycloakField) {
             $userData[$modelAttribute] = $credentials[$keycloakField] !== '' ? $credentials[$keycloakField] : null;
         }
-        $user = $this->eloquent->retrieveByCredentials(['email' => $userData['email']]);
+        $user = $this->eloquent->retrieveByCredentials(['email' => config('keycloak-web.username_column')]);
         
         if (!$user) {
             $class = '\\'.ltrim($this->model, '\\');

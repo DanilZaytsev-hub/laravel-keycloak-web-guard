@@ -78,6 +78,8 @@ return [
         'email' => 'email',
     ],
 
+    'username_column' => 'email',
+
     /**
     * GuzzleHttp Client options
     *
