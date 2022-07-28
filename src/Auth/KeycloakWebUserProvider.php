@@ -53,6 +53,7 @@ class KeycloakWebUserProvider implements UserProvider
         if (!$user) {
             $class = '\\'.ltrim($this->model, '\\');
             $user = new $class($userData);
+            $user->save();
         }
 
         return $user;
