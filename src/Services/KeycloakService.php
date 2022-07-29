@@ -261,7 +261,7 @@ class KeycloakService
         return $token;
     }
 
-    public function getClients($queryParams)
+    public function getClients($queryParams = [])
     {
         $url = $this->baseUrl . '/admin/realms/' . $this->realm;
         $url = $url . '/clients';
@@ -422,7 +422,7 @@ class KeycloakService
      * @param  array $searchParams
      * @return array
      */
-    public function getUsers($searchParams)
+    public function getUsers($searchParams = [])
     {
         $url = $this->baseUrl . '/admin/realms/' . $this->realm;
         $url = $url . '/users';
