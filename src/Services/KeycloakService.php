@@ -493,7 +493,7 @@ class KeycloakService
         }
     }
 
-    public function getClientResource($id)
+    public function getClientResources($id)
     {
         $url = $this->baseUrl . '/admin/realms/' . $this->realm;
         $url = $url . '/clients/protection/resource_set/' . $id . '/authz/resource-server/resource';
