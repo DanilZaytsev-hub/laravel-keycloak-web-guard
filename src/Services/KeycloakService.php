@@ -496,7 +496,7 @@ class KeycloakService
     public function getClientResources($id)
     {
         $url = $this->baseUrl . '/admin/realms/' . $this->realm;
-        $url = $url . '/clients/protection/resource_set/' . $id . '/authz/resource-server/resource';
+        $url = $url . '/clients/' . $id . '/authz/resource-server/resource';
         $token = $this->retrieveToken();
         if (empty($token) || empty($token['access_token'])) {
             return [];
