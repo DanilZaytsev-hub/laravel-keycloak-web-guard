@@ -458,7 +458,7 @@ class KeycloakService
         }
     }
 
-    public function getClientRoles($id)
+    public function getClientRoles($id, $queryParams = [])
     {
         $url = $this->baseUrl . '/admin/realms/' . $this->realm;
         $url = $url . '/clients/' . $id . '/roles';
@@ -478,7 +478,8 @@ class KeycloakService
 
         try {
             $response = $this->httpClient->request('GET', $url, [
-                'headers' => $headers
+                'headers' => $headers,
+                'query' => $queryParams
             ]);
 
             if ($response->getStatusCode() === 200) {
