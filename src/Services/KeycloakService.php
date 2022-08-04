@@ -725,7 +725,7 @@ class KeycloakService
      * @param string $permissions 
      * @return bool 
      */
-    public function obtainPermissions($permissions)
+    public function obtainPermissions($permissions, $clientId = null)
     {
         $url = $this->getOpenIdValue('token_endpoint');
 
@@ -739,7 +739,7 @@ class KeycloakService
 
         $params = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
-            'audience' => $this->clientId,
+            'audience' => $this->clientId ?? $clientId,
             'permission' => $permissions,
             'response_mode' => 'decision',
         ];
