@@ -739,7 +739,7 @@ class KeycloakService
 
         $params = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
-            'audience' => $this->clientId ?? $clientId,
+            'audience' => $clientId ?? $this->clientId,
             'permission' => $permissions,
             'response_mode' => 'decision',
         ];
