@@ -528,6 +528,44 @@ class KeycloakService
         }
     }
 
+    public function getUserClientRoles($userId, $clientId = null)
+    {
+        if (!$clientId) {
+            $clientId = $this->clientId;
+        }
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users/' . $userId . '/role-mappings/clients/' . $clientId;
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $roles = $response->getBody()->getContents();
+                $roles = json_decode($roles, true);
+                return $roles;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load user client roles: ' . $e->getMessage());
+        }        
+    }
+
     /**
      * Retrieve Token from Session
      *
