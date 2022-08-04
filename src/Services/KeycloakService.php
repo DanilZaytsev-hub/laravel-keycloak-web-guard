@@ -563,7 +563,48 @@ class KeycloakService
             $this->logException($e);
 
             throw new Exception('[Keycloak Error] It was not possible to load user client roles: ' . $e->getMessage());
-        }        
+        }
+    }
+
+    public function addClientRolesToUser($userId, $roles, $clientId = null)
+    {
+        if (!$clientId) {
+            $clientId = $this->clientId;
+        }
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users/' . $userId . '/role-mappings/clients/' . $clientId;
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, [
+                'headers' => $headers,
+                'form_params' => [
+                    'roles' => $roles
+                ]
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $roles = $response->getBody()->getContents();
+                $roles = json_decode($roles, true);
+                return $roles;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to add user client roles: ' . $e->getMessage());
+        }
     }
 
     /**
