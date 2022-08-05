@@ -585,14 +585,13 @@ class KeycloakService
         $headers = [
             'Authorization' => 'Bearer ' . $accessToken,
             'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
         ];
 
         try {
             $response = $this->httpClient->request('POST', $url, [
                 'headers' => $headers,
-                'form_params' => [
-                    'roles' => $roles
-                ]
+                'body' => $roles
             ]);
 
             if ($response->getStatusCode() === 200) {
@@ -626,14 +625,13 @@ class KeycloakService
         $headers = [
             'Authorization' => 'Bearer ' . $accessToken,
             'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
         ];
 
         try {
             $response = $this->httpClient->request("DELETE", $url, [
                 'headers' => $headers,
-                'form_params' => [
-                    'roles' => $roles
-                ]
+                'body' => $roles
             ]);
 
             if ($response->getStatusCode() === 200) {
