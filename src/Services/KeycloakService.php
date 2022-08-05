@@ -591,7 +591,7 @@ class KeycloakService
         try {
             $response = $this->httpClient->request('POST', $url, [
                 'headers' => $headers,
-                'body' => $roles
+                'json' => $roles
             ]);
 
             if ($response->getStatusCode() === 200) {
@@ -631,7 +631,7 @@ class KeycloakService
         try {
             $response = $this->httpClient->request("DELETE", $url, [
                 'headers' => $headers,
-                'body' => $roles
+                'json' => $roles
             ]);
 
             if ($response->getStatusCode() === 200) {
