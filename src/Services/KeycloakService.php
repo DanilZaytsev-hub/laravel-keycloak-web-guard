@@ -178,7 +178,6 @@ class KeycloakService
         $idTokenHint = $token->getIdToken();
 
         $params = [
-            'client_id' => $this->getClientId(),
             'post_logout_redirect_uri' => $redirectLogout,
             'id_token_hint' => $idTokenHint
         ];
