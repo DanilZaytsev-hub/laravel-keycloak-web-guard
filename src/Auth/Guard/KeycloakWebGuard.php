@@ -4,6 +4,7 @@ namespace Vizir\KeycloakWebGuard\Auth\Guard;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Contracts\Auth\SupportsBasicAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Vizir\KeycloakWebGuard\Auth\KeycloakAccessToken;
@@ -12,7 +13,7 @@ use Vizir\KeycloakWebGuard\Models\KeycloakUser;
 use Vizir\KeycloakWebGuard\Facades\KeycloakWeb;
 use Illuminate\Contracts\Auth\UserProvider;
 
-class KeycloakWebGuard implements Guard
+class KeycloakWebGuard implements Guard, SupportsBasicAuth
 {
     /**
      * @var null|Authenticatable|KeycloakUser
@@ -199,5 +200,29 @@ class KeycloakWebGuard implements Guard
     public function hasPermissions($permissions)
     {
         return KeycloakWeb::obtainPermissions($permissions);
+    }
+
+    /**
+     * Attempt to authenticate using HTTP Basic Auth.
+     *
+     * @param  string  $field
+     * @param  array  $extraConditions
+     * @return \Symfony\Component\HttpFoundation\Response|null
+     */
+    public function basic($field = 'email', $extraConditions = [])
+    {
+        
+    }
+
+    /**
+     * Perform a stateless HTTP Basic login attempt.
+     *
+     * @param  string  $field
+     * @param  array  $extraConditions
+     * @return \Symfony\Component\HttpFoundation\Response|null
+     */
+    public function onceBasic($field = 'email', $extraConditions = [])
+    {
+
     }
 }

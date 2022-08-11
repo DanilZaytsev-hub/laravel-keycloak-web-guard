@@ -260,6 +260,33 @@ class KeycloakService
         return $token;
     }
 
+    public function getAccessTokenByPassword($username, $password)
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+        $params = [
+            'grant_type' => 'password',
+            'client_id' => $this->getClientId(),
+            'client_secret' => $this->clientSecret,
+            'username' => $username,
+            'password' => $password
+        ];
+
+        $token = [];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+
+            if ($response->getStatusCode() === 200) {
+                $token = $response->getBody()->getContents();
+                $token = json_decode($token, true);
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+        }
+
+        return $token;
+    }
+
     /**
      * Refresh access token
      *
