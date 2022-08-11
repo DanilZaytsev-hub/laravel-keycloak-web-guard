@@ -215,7 +215,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         if ($this->check()) {
             return;
         }
-        if ($this->getAccessTokenByPassword($field, $extraConditions)) {
+        if ($this->attemptBasic($field, $extraConditions)) {
             return;
         }
         throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
@@ -251,7 +251,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         return $user;
     }
 
-    protected function getAccessTokenByPassword()
+    protected function attemptBasic()
     {
         if (!$this->request->getUser()) {
             return false;
