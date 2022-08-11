@@ -216,7 +216,6 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         if (!$user) {
             throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
         }
-        $this->setUser($user);
         return $user;
     }
 
@@ -228,11 +227,6 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      * @return \Symfony\Component\HttpFoundation\Response|null
      */
     public function onceBasic($field = 'email', $extraConditions = [])
-    {
-
-    }
-
-    protected function getAccessTokenByPassword()
     {
         if (! $this->request->getUser()) {
             return false;
@@ -255,5 +249,14 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         return $user;
     }
 
+    protected function getAccessTokenByPassword()
+    {
+        if (! $this->request->getUser()) {
+            return false;
+        }
+
+        $token = KeycloakWeb::getAccessTokenByPassword($this->request->getUser(), $this->request->getPassword());
+        return $this->validate($token);
+    }
 
 }
