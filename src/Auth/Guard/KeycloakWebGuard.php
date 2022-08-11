@@ -215,7 +215,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
             return false;
         }
 
-        $token = KeycloakWeb::getAccessTokenByPassword('d.zaicev@danaflex.ru', 'Dz050268Dz!');
+        $token = KeycloakWeb::getAccessTokenByPassword($this->request->getUser(), $this->request->getPassword());
 
         if (empty($token)) {
             return false;
