@@ -12,6 +12,7 @@ use Vizir\KeycloakWebGuard\Exceptions\KeycloakCallbackException;
 use Vizir\KeycloakWebGuard\Models\KeycloakUser;
 use Vizir\KeycloakWebGuard\Facades\KeycloakWeb;
 use Illuminate\Contracts\Auth\UserProvider;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class KeycloakWebGuard implements Guard, SupportsBasicAuth
 {
@@ -211,6 +212,28 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function basic($field = 'email', $extraConditions = [])
     {
+        $user = $this->getAccessTokenByPassword($field, $extraConditions);
+        if (!$user) {
+            throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
+        }
+        $this->setUser($user);
+        return $user;
+    }
+
+        /**
+     * Perform a stateless HTTP Basic login attempt.
+     *
+     * @param  string  $field
+     * @param  array  $extraConditions
+     * @return \Symfony\Component\HttpFoundation\Response|null
+     */
+    public function onceBasic($field = 'email', $extraConditions = [])
+    {
+
+    }
+
+    protected function getAccessTokenByPassword()
+    {
         if (! $this->request->getUser()) {
             return false;
         }
@@ -224,25 +247,13 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
 
         if (empty($user)) {
             KeycloakWeb::forgetToken();
-
             return false;
         }
 
         // Provide User
         $user = $this->provider->retrieveByCredentials($user);
-
-        $this->setUser($user);
+        return $user;
     }
 
-    /**
-     * Perform a stateless HTTP Basic login attempt.
-     *
-     * @param  string  $field
-     * @param  array  $extraConditions
-     * @return \Symfony\Component\HttpFoundation\Response|null
-     */
-    public function onceBasic($field = 'email', $extraConditions = [])
-    {
 
-    }
 }
