@@ -268,7 +268,8 @@ class KeycloakService
             'client_id' => $this->getClientId(),
             'client_secret' => $this->clientSecret,
             'username' => $username,
-            'password' => $password
+            'password' => $password,
+            'scope' => 'openid'
         ];
 
         $token = [];
