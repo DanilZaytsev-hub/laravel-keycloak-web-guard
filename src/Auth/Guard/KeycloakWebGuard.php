@@ -41,7 +41,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
     {
         return (bool) $this->user();
     }
-    
+
     public function hasUser()
     {
         return (bool) $this->user();
@@ -54,7 +54,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function guest()
     {
-        return ! $this->check();
+        return !$this->check();
     }
 
     /**
@@ -145,21 +145,21 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
 
         return true;
     }
-    
+
     /**
      * Check user is authenticated and return his resource roles
      *
      * @param string $resource Default is empty: point to client_id
      *
      * @return array
-    */
+     */
     public function roles($resource = '')
     {
         if (empty($resource)) {
             $resource = Config::get('keycloak-web.client_id');
         }
 
-        if (! $this->check()) {
+        if (!$this->check()) {
             return false;
         }
 
@@ -173,7 +173,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         $token = $token->parseAccessToken();
 
         $resourceRoles = $token['resource_access'] ?? [];
-        $resourceRoles = $resourceRoles[ $resource ] ?? [];
+        $resourceRoles = $resourceRoles[$resource] ?? [];
         $resourceRoles = $resourceRoles['roles'] ?? [];
 
         return $resourceRoles;
@@ -212,14 +212,16 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function basic($field = 'email', $extraConditions = [])
     {
-        $user = $this->getAccessTokenByPassword($field, $extraConditions);
-        if (!$user) {
-            throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
+        if ($this->check()) {
+            return;
         }
-        return $user;
+        if ($this->getAccessTokenByPassword($field, $extraConditions)) {
+            return;
+        }
+        throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
     }
 
-        /**
+    /**
      * Perform a stateless HTTP Basic login attempt.
      *
      * @param  string  $field
@@ -228,7 +230,7 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function onceBasic($field = 'email', $extraConditions = [])
     {
-        if (! $this->request->getUser()) {
+        if (!$this->request->getUser()) {
             return false;
         }
 
@@ -251,12 +253,11 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
 
     protected function getAccessTokenByPassword()
     {
-        if (! $this->request->getUser()) {
+        if (!$this->request->getUser()) {
             return false;
         }
 
         $token = KeycloakWeb::getAccessTokenByPassword($this->request->getUser(), $this->request->getPassword());
         return $this->validate($token);
     }
-
 }
