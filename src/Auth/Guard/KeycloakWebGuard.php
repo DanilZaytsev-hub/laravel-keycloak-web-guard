@@ -211,7 +211,26 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function basic($field = 'email', $extraConditions = [])
     {
+        if (! $this->request->getUser()) {
+            return false;
+        }
         
+        $token = KeycloakWeb::getAccessTokenByPassword();
+        if (empty($credentials)) {
+            return false;
+        }
+
+        $user = KeycloakWeb::getUserProfile($token);
+        if (empty($user)) {
+            KeycloakWeb::forgetToken();
+
+            return false;
+        }
+
+        // Provide User
+        $user = $this->provider->retrieveByCredentials($user);
+
+        $this->setUser($user);
     }
 
     /**
