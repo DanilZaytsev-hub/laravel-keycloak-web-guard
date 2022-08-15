@@ -4,7 +4,6 @@ namespace Vizir\KeycloakWebGuard\Auth\Guard;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Contracts\Auth\SupportsBasicAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Vizir\KeycloakWebGuard\Auth\KeycloakAccessToken;
@@ -14,7 +13,7 @@ use Vizir\KeycloakWebGuard\Facades\KeycloakWeb;
 use Illuminate\Contracts\Auth\UserProvider;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-class KeycloakWebGuard implements Guard, SupportsBasicAuth
+class KeycloakWebGuard implements Guard
 {
     /**
      * @var null|Authenticatable|KeycloakUser
@@ -212,23 +211,14 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
      */
     public function basic($field = 'email', $extraConditions = [])
     {
-        if ($this->check()) {
+        if ($this->tryBasicAuth()) {
             return;
         }
-        if ($this->attemptBasic($field, $extraConditions)) {
-            return;
-        }
+
         throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
     }
 
-    /**
-     * Perform a stateless HTTP Basic login attempt.
-     *
-     * @param  string  $field
-     * @param  array  $extraConditions
-     * @return \Symfony\Component\HttpFoundation\Response|null
-     */
-    public function onceBasic($field = 'email', $extraConditions = [])
+    public function tryBasicAuth()
     {
         if (!$this->request->getUser()) {
             return false;
@@ -239,25 +229,15 @@ class KeycloakWebGuard implements Guard, SupportsBasicAuth
         if (empty($token)) {
             return false;
         }
+
         $user = KeycloakWeb::getUserProfile($token);
 
         if (empty($user)) {
-            KeycloakWeb::forgetToken();
             return false;
         }
 
-        // Provide User
         $user = $this->provider->retrieveByCredentials($user);
-        return $user;
-    }
-
-    protected function attemptBasic()
-    {
-        if (!$this->request->getUser()) {
-            return false;
-        }
-
-        $token = KeycloakWeb::getAccessTokenByPassword($this->request->getUser(), $this->request->getPassword());
-        return $this->validate($token);
+        $this->setUser($user);
+        return true;
     }
 }
