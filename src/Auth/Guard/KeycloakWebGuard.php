@@ -11,6 +11,7 @@ use Vizir\KeycloakWebGuard\Exceptions\KeycloakCallbackException;
 use Vizir\KeycloakWebGuard\Models\KeycloakUser;
 use Vizir\KeycloakWebGuard\Facades\KeycloakWeb;
 use Illuminate\Contracts\Auth\UserProvider;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class KeycloakWebGuard implements Guard
 {
@@ -39,7 +40,7 @@ class KeycloakWebGuard implements Guard
     {
         return (bool) $this->user();
     }
-    
+
     public function hasUser()
     {
         return (bool) $this->user();
@@ -52,7 +53,7 @@ class KeycloakWebGuard implements Guard
      */
     public function guest()
     {
-        return ! $this->check();
+        return !$this->check();
     }
 
     /**
@@ -133,34 +134,31 @@ class KeycloakWebGuard implements Guard
         if (empty($user)) {
             KeycloakWeb::forgetToken();
 
-            if (Config::get('app.debug', false)) {
-                throw new KeycloakCallbackException('User cannot be authenticated.');
-            }
-
             return false;
         }
 
         // Provide User
         $user = $this->provider->retrieveByCredentials($user);
+
         $this->setUser($user);
 
         return true;
     }
-    
+
     /**
      * Check user is authenticated and return his resource roles
      *
      * @param string $resource Default is empty: point to client_id
      *
      * @return array
-    */
+     */
     public function roles($resource = '')
     {
         if (empty($resource)) {
             $resource = Config::get('keycloak-web.client_id');
         }
 
-        if (! $this->check()) {
+        if (!$this->check()) {
             return false;
         }
 
@@ -174,7 +172,7 @@ class KeycloakWebGuard implements Guard
         $token = $token->parseAccessToken();
 
         $resourceRoles = $token['resource_access'] ?? [];
-        $resourceRoles = $resourceRoles[ $resource ] ?? [];
+        $resourceRoles = $resourceRoles[$resource] ?? [];
         $resourceRoles = $resourceRoles['roles'] ?? [];
 
         return $resourceRoles;
@@ -191,5 +189,55 @@ class KeycloakWebGuard implements Guard
     public function hasRole($roles, $resource = '')
     {
         return empty(array_diff((array) $roles, $this->roles($resource)));
+    }
+
+    /**
+     * Check user permissions for resource
+     * 
+     * @param string $permissions 
+     * @return bool 
+     */
+    public function hasPermissions($permissions)
+    {
+        return KeycloakWeb::obtainPermissions($permissions);
+    }
+
+    /**
+     * Attempt to authenticate using HTTP Basic Auth.
+     *
+     * @param  string  $field
+     * @param  array  $extraConditions
+     * @return \Symfony\Component\HttpFoundation\Response|null
+     */
+    public function basic($field = 'email', $extraConditions = [])
+    {
+        if ($this->tryBasicAuth()) {
+            return;
+        }
+
+        throw new UnauthorizedHttpException('Basic', 'Invalid credentials.');
+    }
+
+    public function tryBasicAuth()
+    {
+        if (!$this->request->getUser()) {
+            return false;
+        }
+
+        $token = KeycloakWeb::getAccessTokenByPassword($this->request->getUser(), $this->request->getPassword());
+
+        if (empty($token)) {
+            return false;
+        }
+
+        $user = KeycloakWeb::getUserProfile($token);
+
+        if (empty($user)) {
+            return false;
+        }
+
+        $user = $this->provider->retrieveByCredentials($user);
+        $this->setUser($user);
+        return true;
     }
 }

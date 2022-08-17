@@ -126,11 +126,11 @@ class KeycloakService
         }
 
         if (is_null($this->callbackUrl)) {
-            $this->callbackUrl = route('keycloak.callback');
+            $this->callbackUrl = route('callback');
         }
 
         if (is_null($this->redirectLogout)) {
-            $this->redirectLogout = Config::get('keycloak-web.redirect_logout');
+            $this->redirectLogout = Config::get('keycloak-web.redirect_logout', '/');
         }
 
         $this->state = $this->generateRandomState();
@@ -167,13 +167,19 @@ class KeycloakService
     {
         $url = $this->getOpenIdValue('end_session_endpoint');
 
-        if (empty($this->redirectLogout)) {
-            $this->redirectLogout = url('/');
+        $redirectLogout = url($this->redirectLogout);
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return '';
         }
 
+        $token = new KeycloakAccessToken($token);
+        $idTokenHint = $token->getIdToken();
+
         $params = [
-            'client_id' => $this->getClientId(),
-            'redirect_uri' => $this->redirectLogout,
+            'post_logout_redirect_uri' => $redirectLogout,
+            'id_token_hint' => $idTokenHint
         ];
 
         return $this->buildUrl($url, $params);
@@ -191,6 +197,7 @@ class KeycloakService
         $url = $this->getLoginUrl();
         return str_replace('/auth?', '/registrations?', $url);
     }
+
     /**
      * Get access token from Code
      *
@@ -207,9 +214,63 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
+
+        $token = [];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+
+            if ($response->getStatusCode() === 200) {
+                $token = $response->getBody()->getContents();
+                $token = json_decode($token, true);
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+        }
+
+        return $token;
+    }
+
+    public function getAccessTokenByClientCredentials()
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+        $params = [
+            'client_id' => $this->getClientId(),
+            'grant_type' => 'client_credentials',
+            'redirect_uri' => $this->callbackUrl,
+            'client_secret' => $this->clientSecret
+        ];
+
+        $token = [];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params]);
+
+            if ($response->getStatusCode() === 200) {
+                $token = $response->getBody()->getContents();
+                $token = json_decode($token, true);
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+        }
+
+        return $token;
+    }
+
+    public function getAccessTokenByPassword($username, $password)
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+        $params = [
+            'grant_type' => 'password',
+            'client_id' => $this->getClientId(),
+            'client_secret' => $this->clientSecret,
+            'username' => $username,
+            'password' => $password,
+            'scope' => 'openid'
+        ];
 
         $token = [];
 
@@ -247,7 +308,7 @@ class KeycloakService
             'redirect_uri' => $this->callbackUrl,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
 
@@ -281,7 +342,7 @@ class KeycloakService
             'refresh_token' => $refreshToken,
         ];
 
-        if (! empty($this->clientSecret)) {
+        if (!empty($this->clientSecret)) {
             $params['client_secret'] = $this->clientSecret;
         }
 
@@ -348,6 +409,271 @@ class KeycloakService
     }
 
     /**
+     * Get users
+     * @param  array $searchParams
+     * @return array
+     */
+    public function getUsers($searchParams = [])
+    {
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users';
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'query' => $searchParams,
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $users = $response->getBody()->getContents();
+                $users = json_decode($users, true);
+                return $users;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load users: ' . $e->getMessage());
+        }
+    }
+
+    public function getClients($queryParams = [])
+    {
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/clients';
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'query' => $queryParams,
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $clients = $response->getBody()->getContents();
+                $clients = json_decode($clients, true);
+                return $clients;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load clients: ' . $e->getMessage());
+        }
+    }
+
+    public function getClientRoles($id, $queryParams = [])
+    {
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/clients/' . $id . '/roles';
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => $headers,
+                'query' => $queryParams
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $clients = $response->getBody()->getContents();
+                $clients = json_decode($clients, true);
+                return $clients;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load roles: ' . $e->getMessage());
+        }
+    }
+
+    public function getClientResources($id)
+    {
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/clients/' . $id . '/authz/resource-server/resource';
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $resources = $response->getBody()->getContents();
+                $resources = json_decode($resources, true);
+                return $resources;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load client resources: ' . $e->getMessage());
+        }
+    }
+
+    public function getUserClientRoles($userId, $clientId = null)
+    {
+        if (!$clientId) {
+            $clientId = $this->clientId;
+        }
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users/' . $userId . '/role-mappings/clients/' . $clientId;
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+        ];
+
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => $headers
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $roles = $response->getBody()->getContents();
+                $roles = json_decode($roles, true);
+                return $roles;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to load user client roles: ' . $e->getMessage());
+        }
+    }
+
+    public function addClientRolesToUser($userId, $roles, $clientId = null)
+    {
+        if (!$clientId) {
+            $clientId = $this->clientId;
+        }
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users/' . $userId . '/role-mappings/clients/' . $clientId;
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
+        ];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, [
+                'headers' => $headers,
+                'json' => $roles
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $roles = $response->getBody()->getContents();
+                $roles = json_decode($roles, true);
+                return $roles;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to add client roles to user: ' . $e->getMessage());
+        }
+    }
+
+    public function removeClientRolesfromUser($userId, $roles, $clientId = null)
+    {
+        if (!$clientId) {
+            $clientId = $this->clientId;
+        }
+        $url = $this->baseUrl . '/admin/realms/' . $this->realm;
+        $url = $url . '/users/' . $userId . '/role-mappings/clients/' . $clientId;
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return [];
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
+        ];
+
+        try {
+            $response = $this->httpClient->request("DELETE", $url, [
+                'headers' => $headers,
+                'json' => $roles
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $roles = $response->getBody()->getContents();
+                $roles = json_decode($roles, true);
+                return $roles;
+            }
+        } catch (GuzzleException $e) {
+            $this->logException($e);
+
+            throw new Exception('[Keycloak Error] It was not possible to remove client roles from user: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Retrieve Token from Session
      *
      * @return array|null
@@ -387,7 +713,7 @@ class KeycloakService
     public function validateState($state)
     {
         $challenge = session()->get(self::KEYCLOAK_SESSION_STATE);
-        return (! empty($state) && ! empty($challenge) && $challenge === $state);
+        return (!empty($state) && !empty($challenge) && $challenge === $state);
     }
 
     /**
@@ -426,7 +752,7 @@ class KeycloakService
             return trim($url, '?') . '?' . Arr::query($params);
         }
 
-        if (! empty($parsedUrl['port'])) {
+        if (!empty($parsedUrl['port'])) {
             $parsedUrl['host'] .= ':' . $parsedUrl['port'];
         }
 
@@ -436,7 +762,7 @@ class KeycloakService
         $url = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
         $query = [];
 
-        if (! empty($parsedUrl['query'])) {
+        if (!empty($parsedUrl['query'])) {
             $parsedUrl['query'] = explode('&', $parsedUrl['query']);
 
             foreach ($parsedUrl['query'] as $value) {
@@ -486,7 +812,7 @@ class KeycloakService
      */
     protected function getOpenIdValue($key)
     {
-        if (! $this->openid) {
+        if (!$this->openid) {
             $this->openid = $this->getOpenIdConfiguration();
         }
 
@@ -506,7 +832,7 @@ class KeycloakService
         if ($this->cacheOpenid) {
             $configuration = Cache::get($cacheKey, []);
 
-            if (! empty($configuration)) {
+            if (!empty($configuration)) {
                 return $configuration;
             }
         }
@@ -539,6 +865,51 @@ class KeycloakService
     }
 
     /**
+     * Check user permissions for resource
+     * 
+     * @param string $permissions 
+     * @return bool 
+     */
+    public function obtainPermissions($permissions, $clientId = null)
+    {
+        $url = $this->getOpenIdValue('token_endpoint');
+
+        $token = $this->retrieveToken();
+        if (empty($token) || empty($token['access_token'])) {
+            return false;
+        }
+
+        $token = new KeycloakAccessToken($token);
+        $accessToken = $token->getAccessToken();
+
+        $params = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:uma-ticket',
+            'audience' => $clientId ?? $this->clientId,
+            'permission' => $permissions,
+            'response_mode' => 'decision',
+        ];
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+        ];
+
+        try {
+            $response = $this->httpClient->request('POST', $url, ['form_params' => $params, 'headers' => $headers]);
+            if ($response->getStatusCode() === 200) {
+                return true;
+            }
+        } catch (GuzzleException $e) {
+            // if ($e->getCode() === 403) {
+            //     return false;
+            // }
+            $this->logException($e);
+
+            // throw new Exception('[Keycloak Error] It was not possible to obtain permissions: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Check we need to refresh token and refresh if needed
      *
      * @param  array $credentials
@@ -546,12 +917,12 @@ class KeycloakService
      */
     protected function refreshTokenIfNeeded($credentials)
     {
-        if (! is_array($credentials) || empty($credentials['access_token']) || empty($credentials['refresh_token'])) {
+        if (!is_array($credentials) || empty($credentials['access_token']) || empty($credentials['refresh_token'])) {
             return $credentials;
         }
 
         $token = new KeycloakAccessToken($credentials);
-        if (! $token->hasExpired()) {
+        if (!$token->hasExpired()) {
             return $credentials;
         }
 
@@ -575,7 +946,7 @@ class KeycloakService
     protected function logException(GuzzleException $e)
     {
         // Guzzle 7
-        if (! method_exists($e, 'getResponse') || empty($e->getResponse())) {
+        if (!method_exists($e, 'getResponse') || empty($e->getResponse())) {
             Log::error('[Keycloak Service] ' . $e->getMessage());
             return;
         }

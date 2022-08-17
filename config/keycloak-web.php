@@ -52,12 +52,19 @@ return [
     'redirect_url' => '/admin',
 
     /**
+     * Page to redirect after logout
+     *
+     * @see Vizir\KeycloakWebGuard\Controllers\AuthController::logout()
+     */
+    'redirect_logout' => '/',
+
+    /**
      * The routes for authenticate
      *
      * Accept a string as the first parameter of route() or false to disable the route.
      *
-     * The routes will receive the name "keycloak.{route}" and login/callback are required.
-     * So, if you make it false, you shoul register a named 'keycloak.login' route and extend
+     * The routes will receive the name "{route}" and login/callback are required.
+     * So, if you make it false, you shoul register a named 'login' route and extend
      * the Vizir\KeycloakWebGuard\Controllers\AuthController controller.
      */
     'routes' => [
@@ -66,6 +73,12 @@ return [
         'register' => 'register',
         'callback' => 'callback',
     ],
+    
+    'sync_attributes' => [
+        'email' => 'email',
+    ],
+
+    'username_column' => 'email',
 
     /**
     * GuzzleHttp Client options

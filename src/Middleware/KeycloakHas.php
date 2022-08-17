@@ -5,7 +5,7 @@ namespace Vizir\KeycloakWebGuard\Middleware;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 
-class KeycloakCan
+class KeycloakHas 
 {
     /**
      * Handle an incoming request.
@@ -15,14 +15,9 @@ class KeycloakCan
      * @param  string|null  $guard
      * @return mixed
      */
-    public function handle($request, Closure $next, ...$guards)
+    public function handle($request, Closure $next, $guard)
     {
-        if (empty($guards) && Auth::check()) {
-            return $next($request);
-        }
-
-        $guards = explode('|', ($guards[0] ?? ''));
-        if (Auth::hasRole($guards)) {
+        if (Auth::hasPermissions($guard)) {
             return $next($request);
         }
 

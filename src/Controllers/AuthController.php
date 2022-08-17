@@ -30,9 +30,8 @@ class AuthController extends Controller
      */
     public function logout()
     {
+        $url = KeycloakWeb::getLogoutUrl();        
         KeycloakWeb::forgetToken();
-
-        $url = KeycloakWeb::getLogoutUrl();
         return redirect($url);
     }
 
@@ -83,6 +82,6 @@ class AuthController extends Controller
             }
         }
 
-        return redirect(route('keycloak.login'));
+        return redirect(route('login'));
     }
 }

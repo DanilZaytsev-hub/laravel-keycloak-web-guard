@@ -5,6 +5,8 @@ namespace Vizir\KeycloakWebGuard\Auth;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Vizir\KeycloakWebGuard\Models\KeycloakUser;
+use Illuminate\Contracts\Hashing\Hasher as HasherContract;
+use Illuminate\Auth\EloquentUserProvider;
 
 class KeycloakWebUserProvider implements UserProvider
 {
@@ -16,13 +18,21 @@ class KeycloakWebUserProvider implements UserProvider
     protected $model;
 
     /**
+     * The fallback eloquent user provider.
+     *
+     * @var EloquentUserProvider
+     */
+    protected $eloquent;
+
+    /**
      * The Constructor
      *
      * @param string $model
      */
-    public function __construct($model)
+    public function __construct(HasherContract $hasher, $model)
     {
         $this->model = $model;
+        $this->eloquent = new EloquentUserProvider($hasher, $model);
     }
 
     /**
@@ -33,9 +43,27 @@ class KeycloakWebUserProvider implements UserProvider
      */
     public function retrieveByCredentials(array $credentials)
     {
-        $class = '\\'.ltrim($this->model, '\\');
+        $syncAttributes = config('keycloak-web.sync_attributes');
+        $userData = [];
+        foreach ($syncAttributes as $modelAttribute => $keycloakField) {
+            if (array_key_exists($keycloakField, $credentials)) {
+                $userData[$modelAttribute] = $credentials[$keycloakField] !== '' ? $credentials[$keycloakField] : null;       
+            }
+        }
+        $user = $this->eloquent->retrieveByCredentials(['email' => $userData[config('keycloak-web.username_column')]]);
+        
+        if (!$user) {
+            $class = '\\'.ltrim($this->model, '\\');
+            $user = new $class($userData);
+            $user->save();
+        } else {
+            foreach ($userData as $key => $value) {
+                $user->{$key} = $value;
+            }
+            $user->save();
+        }
 
-        return new $class($credentials);
+        return $user;
     }
 
     /**
@@ -46,7 +74,7 @@ class KeycloakWebUserProvider implements UserProvider
      */
     public function retrieveById($identifier)
     {
-        throw new \BadMethodCallException('Unexpected method [retrieveById] call');
+        return $this->eloquent->retrieveById($identifier);
     }
 
     /**
@@ -58,7 +86,7 @@ class KeycloakWebUserProvider implements UserProvider
      */
     public function retrieveByToken($identifier, $token)
     {
-        throw new \BadMethodCallException('Unexpected method [retrieveByToken] call');
+        return $this->eloquent->retrieveByToken($identifier, $token);
     }
 
     /**
@@ -70,7 +98,7 @@ class KeycloakWebUserProvider implements UserProvider
      */
     public function updateRememberToken(Authenticatable $user, $token)
     {
-        throw new \BadMethodCallException('Unexpected method [updateRememberToken] call');
+        return $this->eloquent->updateRememberToken($user, $token);
     }
 
     /**
