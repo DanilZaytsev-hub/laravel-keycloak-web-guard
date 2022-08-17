@@ -12,17 +12,17 @@ class KeycloakCan
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  string|null  $guard
+     * @param  string $role
+     * @param  string $resource
      * @return mixed
      */
-    public function handle($request, Closure $next, ...$guards)
+    public function handle($request, Closure $next, $role, $resource = '')
     {
-        if (empty($guards) && Auth::check()) {
+        if (empty($role) && Auth::check()) {
             return $next($request);
         }
 
-        $guards = explode('|', ($guards[0] ?? ''));
-        if (Auth::hasRole($guards)) {
+        if (Auth::hasRole($role, $resource)) {
             return $next($request);
         }
 
