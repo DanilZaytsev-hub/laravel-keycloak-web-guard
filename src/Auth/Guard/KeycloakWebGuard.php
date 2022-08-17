@@ -157,6 +157,8 @@ class KeycloakWebGuard implements Guard
             $resource = Config::get('keycloak-web.client_id');
         }
 
+        $accessType = $resource == 'realm' ? 'realm_access' : 'resource_access';
+
         if (!$this->check()) {
             return false;
         }
@@ -170,10 +172,11 @@ class KeycloakWebGuard implements Guard
         $token = new KeycloakAccessToken($token);
         $token = $token->parseAccessToken();
 
-        $resourceRoles = $token['resource_access'] ?? [];
-        $resourceRoles = $resourceRoles[$resource] ?? [];
+        $resourceRoles = $token[$accessType] ?? [];
+        if ($resource != 'realm') {
+            $resourceRoles = $resourceRoles[$resource] ?? [];
+        }
         $resourceRoles = $resourceRoles['roles'] ?? [];
-
         return $resourceRoles;
     }
 
