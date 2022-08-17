@@ -2,6 +2,8 @@
 
 namespace Vizir\KeycloakWebGuard\Traits;
 
+use Illuminate\Support\Facades\Auth;
+
 trait KeycloakModelTrait {
 
     /**
