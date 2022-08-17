@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Vizir\KeycloakWebGuard\Auth\KeycloakAccessToken;
 use Vizir\KeycloakWebGuard\Exceptions\KeycloakCallbackException;
-use Vizir\KeycloakWebGuard\Models\KeycloakUser;
 use Vizir\KeycloakWebGuard\Facades\KeycloakWeb;
 use Illuminate\Contracts\Auth\UserProvider;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -16,7 +15,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 class KeycloakWebGuard implements Guard
 {
     /**
-     * @var null|Authenticatable|KeycloakUser
+     * @var null|Authenticatable
      */
     protected $user;
 
