@@ -31,6 +31,14 @@ class KeycloakWebGuardServiceProvider extends ServiceProvider
         Auth::provider('keycloak-users', function($app, array $config) {
             return new KeycloakWebUserProvider($app['hash'], $config['model']);
         });
+
+        Gate::define('keycloak-role', function ($user, $roles, $resource = '') {
+            return $user->hasRole($roles, $resource) ?: null;
+        });
+
+        Gate::define('keycloak-permission', function ($user, $permissions) {
+            return $user->hasPermissions($permissions) ?: null;
+        });
     }
 
     /**
