@@ -1,6 +1,6 @@
-## Install
+## Настройка
 
-Edit composer.json file
+1) В начале необходимо отредактировать composer.json файл 
 
 composer.json
 ```
@@ -16,23 +16,9 @@ composer.json
     }
 }
 ```
-Run command
-```
-composer update
-```
+2) После редактирования необходимо выполнить команду `composer update`
 
-If you want to change routes or the default values for Keycloak, publish the config file:
-
-```
-php artisan vendor:publish  --provider="Vizir\KeycloakWebGuard\KeycloakWebGuardServiceProvider"
-
-```
-
-## Configuration
-
-Edit .env
-
-.env
+3) Затем нужно добавить свойства в `.env`
 ```
 KEYCLOAK_BASE_URL=
 KEYCLOAK_REALM=
@@ -43,14 +29,8 @@ KEYCLOAK_REDIRECT_URI="${APP_URL}"
 KEYCLOAK_CACHE_OPENID=true
 KEYCLOAK_REDIRECT_LOGOUT="${APP_URL}/"
 ```
-## Laravel Auth
 
-You should add Keycloak Web guard to your `config/auth.php`.
-
-Just add **keycloak-web** to "driver" option on configurations you want.
-
-As my default is web, I add to it:
-
+4) В файле `config/auth.php` необходимо заменить `guards.web.driver` на `"keycloak-web"` и `providers.users.driver` на `keycloak-users`
 ```php
 'guards' => [
     'web' => [
@@ -61,9 +41,6 @@ As my default is web, I add to it:
     // ...
 ],
 ```
-
-And change your provider config too:
-
 ```php
 'providers' => [
     'users' => [
@@ -74,24 +51,39 @@ And change your provider config too:
     // ...
 ]
 ```
+6) В начале файла `routes/web.php` нужно добавить маршруты
+```
+Vizir\KeycloakWebGuard\Facades\KeycloakWeb::routes();
+```
+7) В файле модели User нужно добавить `trait Vizir\KeycloakWebGuard\Traits\KeycloakModelTrait`
 
-## Roles
+```
+use Vizir\KeycloakWebGuard\Traits\KeycloakModelTrait as KeycloakModel;
 
-You can check user has a role simply by `Auth::hasRole('role')`;
+class User extends Authenticatable implements Searchable
+{
+    use KeycloakModel;
+}
+```
+8) Для проверки прав доступа и ролей можно использовать `middlewares`, которые необходимо добавить в `app/Http/Kerner.php` 
+```
+'keycloak-can' => \Vizir\KeycloakWebGuard\Middleware\KeycloakCan::class,
+'keycloak-has' => \Vizir\KeycloakWebGuard\Middleware\KeycloakHas::class
+```
+Проверка ролей
+```
+Route::middleware(['auth', 'keycloak-can:role'])
+Route::middleware(['auth', 'keycloak-can:role,client'])
+```
+Если вторым аргументом передать значение `"realm"`, то роли будут браться из realm'a
 
-This method accept two parameters: the first is the role (string or array of strings) and the second is the resource.
+Проверка прав доступа
+```
+Route::middleware(['auth', 'keycloak-has:resource'])
+Route::middleware(['auth', 'keycloak-has:resource#scope'])
+```
 
-If not provided, resource will be the client_id, which is the regular check if you authenticating into this client to your front.
-
-## Permissions
-
-You can check user has a permission by `Auth::hasPermissions('resource#scope')`;
-
-### Keycloak Web Gate
-
-You can use [Laravel Authorization Gate](https://laravel.com/docs/7.x/authorization#gates) to check user against one or more roles (and resources).
-
-For example, in your Controller you can check **one role**:
+10) Gates 
 
 ```php
 if (Gate::denies('keycloak-web', 'manage-account')) {
@@ -115,8 +107,11 @@ if (Gate::denies('keycloak-web', 'manage-account', 'another-resource')) {
 }
 ```
 
-*This last use is not trivial, but you can extend the Guard to request authentication/authorization to multiple resources. By default, we request only the current client.*
+Если необходимо отредактировать параметры библиотеки можно опубликовать конфиг файл: 
+```
+php artisan vendor:publish  --provider="Vizir\KeycloakWebGuard\KeycloakWebGuardServiceProvider"
 
-### Keycloak Middlewares
+```
+## Настройка администрирования
 
 
