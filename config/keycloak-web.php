@@ -75,6 +75,7 @@ return [
     ],
     
     'sync_attributes' => [
+        'keycloak_id' => 'sub',
         'email' => 'email',
     ],
 

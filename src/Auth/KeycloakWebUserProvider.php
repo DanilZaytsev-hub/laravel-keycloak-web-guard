@@ -47,21 +47,21 @@ class KeycloakWebUserProvider implements UserProvider
         $userData = [];
         foreach ($syncAttributes as $modelAttribute => $keycloakField) {
             if (array_key_exists($keycloakField, $credentials)) {
-                $userData[$modelAttribute] = $credentials[$keycloakField] !== '' ? $credentials[$keycloakField] : null;       
+                $userData[$modelAttribute] = $credentials[$keycloakField] !== '' ? $credentials[$keycloakField] : null;
             }
         }
         $user = $this->eloquent->retrieveByCredentials(['email' => $userData[config('keycloak-web.username_column')]]);
-        
+
         if (!$user) {
-            $class = '\\'.ltrim($this->model, '\\');
-            $user = new $class($userData);
-            $user->save();
-        } else {
-            foreach ($userData as $key => $value) {
-                $user->{$key} = $value;
-            }
-            $user->save();
+            $class = '\\' . ltrim($this->model, '\\');
+            $user = new $class();
         }
+
+        foreach ($userData as $key => $value) {
+            $user->{$key} = $value;
+        }
+
+        $user->save();
 
         return $user;
     }
