@@ -65,7 +65,9 @@ class User extends Authenticatable implements Searchable
     use KeycloakModel;
 }
 ```
-8) Для проверки прав доступа и ролей можно использовать `middlewares`, которые необходимо добавить в `app/Http/Kerner.php` 
+8) В формах для выхода из приложения необходимо заменить метод отправки с `GET` на `POST`
+
+9) Для проверки прав доступа и ролей можно использовать `middleware`, которые необходимо добавить в `app/Http/Kerner.php` 
 ```
 'keycloak-can' => \Vizir\KeycloakWebGuard\Middleware\KeycloakCan::class,
 'keycloak-has' => \Vizir\KeycloakWebGuard\Middleware\KeycloakHas::class
