@@ -120,19 +120,25 @@ php artisan vendor:publish  --provider="Vizir\KeycloakWebGuard\KeycloakWebGuardS
 2) Для предоставления доступа для редактрования ролей в каком-либо клинте необходимо создать и присвоить пользователю клинтскую роль и с помощью нее настроить правило доступа
 
 2.1) Создание роли
+
 ![image](https://user-images.githubusercontent.com/81566198/185395298-6505c129-bee4-43ca-bf0f-4b0db86f213d.png)
 
 2.2) Добавление атрибута для отображения этой роли в списке 
+
 ![image](https://user-images.githubusercontent.com/81566198/185395442-362253cd-f774-40e2-b370-60da489e0d5a.png)
 
 2.3) Создание ресурса
+
 ![image](https://user-images.githubusercontent.com/81566198/185395713-3856f106-b771-4098-967e-770ea28f1608.png)
 
 2.4) Создание политики проверки роли 
+
 ![image](https://user-images.githubusercontent.com/81566198/185395889-c47e8bb6-92b1-4195-8a0e-69ceb1f512c7.png)
 
 2.5) Создание правила доступа к редактированию ресурса
+
 ![image](https://user-images.githubusercontent.com/81566198/185396333-f4823ccf-e6b0-4016-9f8d-a1d3a0369c15.png)
 
 2.6) После присвоения пользователю созданной роли он сможет редактировать права доступа в клиенте, к которому роль принадлежит
+
 ![image](https://user-images.githubusercontent.com/81566198/185397179-3dca45c7-2c03-4f48-b2f9-ad75805847aa.png)
